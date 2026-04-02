@@ -5,9 +5,10 @@ import io
 
 app = Flask(__name__)
 
-# IMPORTANT: Ensure this matches your Vercel URL
+# Security: Allows your Vercel frontend to talk to this backend
 CORS(app, resources={r"/api/*": {"origins": ["https://resume-ai-analyzer-delta.vercel.app"]}})
 
+# Simplified skill list (3 Core + 1 Language)
 CORE_SKILLS = ["Data Structures", "Database", "Communication Skills"]
 
 @app.route('/api/analyze', methods=['POST'])
@@ -19,6 +20,7 @@ def analyze_resume():
     text = ""
     
     try:
+        # Read PDF content
         with pdfplumber.open(io.BytesIO(file.read())) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
@@ -32,21 +34,21 @@ def analyze_resume():
     missing = []
     points = 0
 
-    # Programming Language Logic
-    has_language = False
+    # 1. Programming Language Logic (Java OR Python = 1 Point)
+    has_lang = False
     if "python" in text_lower:
         matched.append("Python")
-        has_language = True
+        has_lang = True
     if "java" in text_lower:
         matched.append("Java")
-        has_language = True
+        has_lang = True
     
-    if has_language:
+    if has_lang:
         points += 1
     else:
         missing.append("Java / Python")
 
-    # Core Skills Logic
+    # 2. Core Skills Logic (Each = 1 Point)
     for skill in CORE_SKILLS:
         if skill.lower() in text_lower:
             matched.append(skill)
@@ -54,6 +56,8 @@ def analyze_resume():
         else:
             missing.append(skill)
 
+    # Score calculation (Total 4 points)
+    # 4/4 = 100%, 3/4 = 75%, 2/4 = 50%, 1/4 = 25%
     score = int((points / 4) * 100)
     
     return jsonify({
@@ -63,4 +67,5 @@ def analyze_resume():
     })
 
 if __name__ == '__main__':
+    # Required settings for Render deployment
     app.run(debug=False, host='0.0.0.0', port=5000)
