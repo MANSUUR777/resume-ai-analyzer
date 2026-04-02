@@ -16,15 +16,18 @@ export default function App() {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     if (file.size > 1024 * 1024) {
       setErrorMessage('File exceeds 1MB!');
       setAppState('error');
       setTimeout(() => setAppState('idle'), 4000);
       return;
     }
+
     setAppState('analyzing');
     const formData = new FormData();
     formData.append('file', file);
+
     try {
       const response = await api.post('/analyze', formData);
       setResults(response.data);
@@ -38,33 +41,69 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-dark flex flex-col items-center py-10 overflow-x-hidden px-4 pb-20">
-      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-center mb-6 z-10">
+      
+      {/* HEADER SECTION */}
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }} 
+        animate={{ y: 0, opacity: 1 }} 
+        className="text-center mb-6 z-10"
+      >
         <h1 className="text-4xl font-bold tracking-tight mb-2 text-cream">AI Resume Analyzer</h1>
         <p className="text-neutral-400">Upload your PDF and let Teddy fetch your stack.</p>
       </motion.div>
 
+      {/* TEDDY SECTION */}
       <div className="z-20 flex justify-center w-full">
         <AnimatedTeddy state={appState} />
       </div>
 
+      {/* MAIN CONTENT AREA */}
       <div className="w-full max-w-2xl flex justify-center z-10 relative min-h-[400px] mt-[-15px]">
         <AnimatePresence mode="wait">
+          
+          {/* UPLOAD STATE */}
           {appState === 'idle' && (
-            <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: 20 }} className="w-full max-w-md absolute">
+            <motion.div 
+              key="upload" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0, y: 20 }} 
+              className="w-full max-w-md absolute"
+            >
               <UploadBox onUpload={handleFileUpload} />
             </motion.div>
           )}
+
+          {/* LOADING STATE */}
           {appState === 'analyzing' && (
             <motion.div key="loading" className="flex flex-col items-center absolute">
               <svg width="40" height="90" className="z-10 overflow-visible mb-2 mt-[-40px]">
-                <motion.path animate={{ d: ["M 20 0 L 20 90", "M 20 0 L 18 90", "M 20 0 L 20 90"] }} transition={{ repeat: Infinity, duration: 0.6 }} fill="transparent" stroke="#fdfbf7" strokeWidth="3" strokeDasharray="8 4" />
+                <motion.path 
+                  animate={{ d: ["M 20 0 L 20 90", "M 20 0 L 18 90", "M 20 0 L 20 90"] }} 
+                  transition={{ repeat: Infinity, duration: 0.6 }} 
+                  fill="transparent" 
+                  stroke="#fdfbf7" 
+                  strokeWidth="3" 
+                  strokeDasharray="8 4" 
+                />
               </svg>
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }} className="w-12 h-12 border-4 border-neutral-800 border-t-cream rounded-full mb-4" />
+              <motion.div 
+                animate={{ rotate: 360 }} 
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }} 
+                className="w-12 h-12 border-4 border-neutral-800 border-t-cream rounded-full mb-4" 
+              />
               <p className="text-lg font-medium text-cream">Extracting logic...</p>
             </motion.div>
           )}
+
+          {/* RESULTS STATE */}
           {appState === 'results' && results && (
-            <motion.div key="results" initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} className="w-full bg-card p-8 rounded-3xl border border-neutral-800 shadow-2xl mt-8">
+            <motion.div 
+              key="results" 
+              initial={{ opacity: 0, x: 100 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="w-full bg-card p-8 rounded-3xl border border-neutral-800 shadow-2xl mt-8"
+            >
               <div className="flex items-center justify-between border-b border-neutral-800 pb-6 mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-cream">Analysis Complete</h2>
@@ -72,23 +111,48 @@ export default function App() {
                 </div>
                 <ScoreCircle score={results.score} />
               </div>
+
               <div className="space-y-6">
                 <div>
-                  <h3 className="flex items-center text-lg font-medium text-green-400 mb-3"><CheckCircle className="w-5 h-5 mr-2" /> Matched Skills</h3>
+                  <h3 className="flex items-center text-lg font-medium text-green-400 mb-3">
+                    <CheckCircle className="w-5 h-5 mr-2" /> Matched Skills
+                  </h3>
                   <div className="flex flex-wrap gap-2">
-                    {results.matched.map(skill => <SkillBadge key={skill} skill={skill} type="match" />)}
+                    {results.matched.map(skill => (
+                      <SkillBadge key={skill} skill={skill} type="match" />
+                    ))}
                   </div>
                 </div>
+
                 <div>
-                  <h3 className="flex items-center text-lg font-medium text-red-400 mb-3"><XCircle className="w-5 h-5 mr-2" /> Missing Skills</h3>
+                  <h3 className="flex items-center text-lg font-medium text-red-400 mb-3">
+                    <XCircle className="w-5 h-5 mr-2" /> Missing Skills
+                  </h3>
                   <div className="flex flex-wrap gap-2">
-                    {results.missing.map(skill => <SkillBadge key={skill} skill={skill} type="missing" />)}
+                    {results.missing.map(skill => (
+                      <SkillBadge key={skill} skill={skill} type="missing" />
+                    ))}
                   </div>
                 </div>
               </div>
-              <button onClick={() => setAppState('idle')} className="mt-8 w-full py-3 bg-cream text-dark rounded-xl font-bold hover:bg-neutral-200 transition-colors">Analyze Another Resume</button>
+
+              <button 
+                onClick={() => setAppState('idle')} 
+                className="mt-8 w-full py-3 bg-cream text-dark rounded-xl font-bold hover:bg-neutral-200 transition-colors"
+              >
+                Analyze Another Resume
+              </button>
             </motion.div>
           )}
+
+          {/* ERROR STATE */}
+          {appState === 'error' && (
+            <motion.div key="error" className="flex flex-col items-center text-red-400 absolute">
+              <AlertCircle className="w-12 h-12 mb-2" />
+              <p className="text-lg font-bold">{errorMessage}</p>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </div>
     </div>
